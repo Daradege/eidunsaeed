@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <title>Wedding Card</title>
+    <style>
+        * {
+            font-family: 'Vazirmatn', sans-serif;
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: url('bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            padding: 20px;
+            position: fixed;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .card {
+            width: min(90vw, 350px);
+            height: min(75vh, 600px);
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1.5s ease-in-out;
+            cursor: pointer;
+        }
+
+        .card.opened {
+            transform: rotateY(180deg);
+        }
+
+        .front, .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+        }
+
+        .front {
+            background: linear-gradient(45deg, #f3d4d4, #fff1f1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(20px, 4vw, 32px);
+            color: #333;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .back {
+            transform: rotateY(180deg);
+            background: white;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .poem-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 1s ease-in-out;
+        }
+
+        .poem-img.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .lant {
+            position: fixed;
+            pointer-events: none;
+            width: 100px;
+            height: 100px;
+            background: url('lant.png') no-repeat center/contain;
+            animation: falling 6s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes falling {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        #visualizer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 15vh;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 10px;
+            gap: 2px;
+            z-index: -2;
+            background: linear-gradient(to top, rgba(0,0,0,0.2), transparent);
+        }
+
+        .bar {
+            background: rgba(255, 255, 255, 0.7);
+            width: calc(100vw / 64);
+            height: 5px;
+            transition: height 0.1s ease;
+            border-radius: 2px 2px 0 0;
+            box-shadow: 0 0 2px rgba(255,255,255,0.5);
+        }
+
+        .audio-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .audio-controls button {
+            background: rgba(255,255,255,0.8);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .audio-controls button:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                width: 1030px;
+                height: 580px;
+            }
+            
+            .front {
+                font-size: 18px;
+            }
+            
+            .lant {
+                width: 80px;
+                height: 80px;
+            }
+
+            .bar {
+                width: calc(100vw / 32);
+            }
+
+            #visualizer {
+                height: 12vh;
+            }
+
+            .audio-controls {
+                bottom: 10px;
+                right: 10px;
+            }
+
+            .audio-controls button {
+                width: 35px;
+                height: 35px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <audio id="bgMusic" src="song.mp3" preload="auto"></audio>
+    
+    <div class="card" onclick="openCard()">
+        <div class="front">از طرف علی صفامنش</div>
+        <div class="back">
+            <img src="card.png" class="poem-img" alt="Wedding Poem">
+        </div>
+    </div>
+
+    <div id="visualizer"></div>
+    <div class="audio-controls">
+        <button onclick="togglePlay()">▶️</button>
+        <button onclick="adjustVolume(-0.1)">🔉</button>
+        <button onclick="adjustVolume(0.1)">🔊</button>
+    </div>
+
+    <script>
+        let isOpened = false;
+        const audio = document.getElementById('bgMusic');
+        let lantInterval;
+        let audioContext;
+        let analyser;
+        
+        function openCard() {
+            if (!isOpened) {
+                isOpened = true;
+                document.querySelector('.card').classList.add('opened');
+                setTimeout(() => {
+                    document.querySelector('.poem-img').classList.add('visible');
+                }, 1000);
+                
+                audio.play();
+                createlants();
+                setupVisualizer();
+            }
+        }
+
+        function togglePlay() {
+            if (audio.paused) {
+                audio.play();
+                if (!audioContext) setupVisualizer();
+            } else {
+                audio.pause();
+            }
+            document.querySelector('.audio-controls button:first-child').textContent = 
+                audio.paused ? '▶️' : '⏸️';
+        }
+
+        function adjustVolume(change) {
+            audio.volume = Math.max(0, Math.min(1, audio.volume + change));
+        }
+
+        function createlants() {
+            lantInterval = setInterval(() => {
+                const lant = document.createElement('div');
+                lant.className = 'lant';
+                lant.style.left = Math.random() * 90 + 5 + 'vw';
+                document.body.appendChild(lant);
+                
+                setTimeout(() => {
+                    lant.remove();
+                }, 6000);
+            }, 400);
+        }
+
+        function setupVisualizer() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                const source = audioContext.createMediaElementSource(audio);
+                
+                source.connect(analyser);
+                analyser.connect(audioContext.destination);
+                
+                analyser.fftSize = 128;
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                const visualizer = document.getElementById('visualizer');
+                visualizer.innerHTML = '';
+                
+                for(let i = 0; i < bufferLength; i++) {
+                    const bar = document.createElement('div');
+                    bar.className = 'bar';
+                    visualizer.appendChild(bar);
+                }
+                
+                function animate() {
+                    if (!audio.paused) {
+                        analyser.getByteFrequencyData(dataArray);
+                        const bars = document.getElementsByClassName('bar');
+                        
+                        for(let i = 0; i < bufferLength; i++) {
+                            const height = dataArray[i] * 0.7;
+                            bars[i].style.height = height + 'px';
+                        }
+                    }
+                    requestAnimationFrame(animate);
+                }
+                
+                animate();
+            }
+        }
+
+        audio.volume = 1;
+    </script>
+</body>
+</html>
