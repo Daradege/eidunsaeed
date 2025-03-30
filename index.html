@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-    <title>Wedding Card</title>
+    <title>Eid Al-Fitr Greeting Card</title>
     <style>
         * {
             font-family: 'Vazirmatn', sans-serif;
@@ -66,7 +66,7 @@
             align-items: center;
         }
 
-        .poem-img {
+        .cardimage-img {
             width: 100%;
             height: 100%;
             object-fit: contain;
@@ -75,7 +75,7 @@
             transition: all 1s ease-in-out;
         }
 
-        .poem-img.visible {
+        .cardimage-img.visible {
             opacity: 1;
             transform: scale(1);
         }
@@ -196,7 +196,7 @@
     <div class="card" onclick="openCard()">
         <div class="front">از طرف علی صفامنش</div>
         <div class="back">
-            <img src="card.png" class="poem-img" alt="Wedding Poem">
+            <img src="card.png" class="cardimage-img" alt="Eid Al-Fitr Greeting cardimage">
         </div>
     </div>
 
@@ -219,7 +219,7 @@
                 isOpened = true;
                 document.querySelector('.card').classList.add('opened');
                 setTimeout(() => {
-                    document.querySelector('.poem-img').classList.add('visible');
+                    document.querySelector('.cardimage-img').classList.add('visible');
                 }, 1000);
                 
                 audio.play();
